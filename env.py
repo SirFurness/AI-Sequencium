@@ -4,6 +4,11 @@ from player import Player
 from winner import Winner
 from game import Game
 
+import os
+import time
+
+import torch
+
 class Environment:
     def __init__(self):
         self.game = Game()
@@ -26,7 +31,7 @@ class Environment:
                 for coord in availableCoordinates]
 
         if len(availableActions) == 0:
-            availableActions = [-1]
+            availableActions = [36]
 
         return availableActions
 
@@ -41,7 +46,7 @@ class Environment:
 
     def applyAction(self, action):
         # no-move action
-        if action < 0:
+        if action == 36:
             self.game.updateCurrentPlayer()
             return
 
@@ -63,6 +68,12 @@ class Environment:
         # flattens the list
         return [self.getSquareContent(square)
                 for row in self.game.grid for square in row]
+
+    def getStateTensor(self):
+        stateList = self.getState()
+
+        return torch.tensor(stateList, dtype=torch.float)
+
     def getStateNotFlat(self):
         return [[self.getSquareContent(square) for square in row]
                 for row in self.game.grid]
@@ -95,6 +106,7 @@ class Environment:
         state = self.getStateNotFlat()
         maxSpacing = 4
 
+        os.system("cls||clear")
         for row in state:
             for num in row:
                 spacing = maxSpacing - len(str(num))
@@ -103,3 +115,4 @@ class Environment:
                 print(str(num), end='') 
             for j in range(maxSpacing-2):
                 print("")
+        time.sleep(1)
