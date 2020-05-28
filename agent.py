@@ -6,6 +6,7 @@ from replay_buffer import ReplayBuffer
 import torch.optim as optim
 
 import random
+import math
 
 class LearningAgent:
     def __init__(self, env):
@@ -29,9 +30,9 @@ class LearningAgent:
         
         self.state = env.getState()
 
-    def move(self, env, epsilon):
-        action = self.q.sample_action(env, epsilon) 
-        newState, reward, isDone = env.step(action)
+    def move(self, env, epsilon, flip):
+        action = self.q.sample_action(env, epsilon, flip)
+        newState, reward, isDone = env.step(action, flip)
         newValidActionList = env.getValidActions()
 
         done_mask = 0.0 if isDone else 1.0
@@ -60,24 +61,51 @@ class LearningAgent:
     def state_dict(self):
         return self.q.state_dict()
 
+class MultiStupidAgent:
+    def __init__(self, num_of_agents):
+        self.num_of_agents = num_of_agents
+
+        self.q_nets = [Qnet() for i in range(num_of_agents)]
+
+        self.current_agent = 0
+
+        self.update_interval = 1000 * num_of_agents
+        self.update_offset = math.trunc(self.update_interval / num_of_agents)
+
+    def move(self, env, epsilon, flip):
+        current_q = self.q_nets[self.current_agent]
+
+        action = current_q.sample_action(env, epsilon, flip)
+        env.step(action, flip)
+
+    def increaseCurrentAgent(self):
+        self.current_agent = (self.current_agent + 1) % self.num_of_agents
+
+    def update(self, episode, state_dict):
+        self.increaseCurrentAgent()
+
+        for i, q_net in enumerate(self.q_nets):
+            if (episode + i * self.update_offset) % self.update_interval == 0:
+                q_net.load_state_dict(state_dict)
+
 class StupidAgent:
     def __init__(self, state_dict):
         self.q = Qnet()
         self.q.load_state_dict(state_dict)
 
-        self.updateInterval = 1000
+        self.updateInterval = 2000
 
-    def move(self, env, epsilon):
-        action = self.q.sample_action(env, epsilon, flip=True)
+    def move(self, env, epsilon, flip):
+        action = self.q.sample_action(env, epsilon, flip)
         
-        env.step(action)
+        env.step(action, flip)
 
     def update(self, episode, state_dict):
         if episode % self.updateInterval == 0 and episode != 0:
             self.q.load_state_dict(state_dict)
 
 class HumanAgent:
-    def move(self, env, _epsilon):
+    def move(self, env, _epsilon, flip):
         strMove = input("Row Space Column: ")
         listInput = strMove.split()
         rowAndCol = [int(string) for string in listInput]
@@ -87,11 +115,14 @@ class HumanAgent:
 
         action = env.convertCoordinateToAction((row, col)) 
 
-        env.step(action)
+        if flip:
+            action = 35 - action
+
+        env.step(action, flip)
 
 class RandomAgent:
-    def move(self, env, _epsilon):
+    def move(self, env, _epsilon, flip):
         validActions = env.getValidActions()
         action = random.choice(validActions)
 
-        env.step(action)
+        env.step(action, flip)

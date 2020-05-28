@@ -21,7 +21,7 @@ class Environment:
     def reset(self):
         self.game.restart()
 
-    def getValidActions(self):
+    def getValidActions(self, flip=False):
         availableCoordinates = [(row, col) 
                 for row in range(self.game.size)
                 for col in range(self.game.size)
@@ -30,16 +30,19 @@ class Environment:
         availableActions = [self.convertCoordinateToAction(coord)
                 for coord in availableCoordinates]
 
+        if flip:
+            availableActions = [35-action for action in availableActions]
+
         if len(availableActions) == 0:
             availableActions = [36]
 
         return availableActions
 
-    def step(self, action):
+    def step(self, action, flip):
         self.applyAction(action)
         
-        newState = self.getState()
-        reward = self.getReward()
+        newState = self.getState(flip)
+        reward = self.getReward(flip)
         isDone = self.game.isGameOver()
 
         return (newState, reward, isDone)
@@ -103,18 +106,20 @@ class Environment:
             # NoPlayer
             return 0
 
-    def getReward(self):
+    def getReward(self, flip=False):
         winner = self.game.getWinner()
         player = self.game.currentPlayer
 
+        scale = -1 if flip else 1
+
         if winner == Winner.NotOver:
-            return self.notOverReward
+            return self.notOverReward * scale
         elif winner == Winner.Tie:
-            return self.tieReward
+            return self.tieReward * scale
         elif winner == Winner.A:
-            return self.winReward
+            return self.winReward * scale
         else:
-            return self.loseReward
+            return self.loseReward * scale
         #elif winner == Winner.A and player == Player.A:
         #    return self.winReward
         #elif winner == Winner.B and player == Player.B:
@@ -122,17 +127,28 @@ class Environment:
         #else:
         #    return self.loseReward
 
-    def render(self):
-        state = self.getStateNotFlat()
+    def render(self, flip):
+        state = self.getState(flip)[:-2]
+
         maxSpacing = 4
 
         os.system("cls||clear")
-        for row in state:
-            for num in row:
-                spacing = maxSpacing - len(str(num))
-                for i in range(spacing):
-                    print(" ", end='')
-                print(str(num), end='') 
-            for j in range(maxSpacing-2):
-                print("")
+
+        for i, square in enumerate(state):
+            if i % 6 == 0:
+                for j in range(maxSpacing-2):
+                    print("")
+            spacing = maxSpacing - len(str(square))
+            for i in range(spacing):
+                print(" ", end='')
+            print(str(square), end='')
+        print("")
         time.sleep(1)
+        #for row in state:
+        #    for num in row:
+        #        spacing = maxSpacing - len(str(num))
+        #        for i in range(spacing):
+        #            print(" ", end='')
+        #        print(str(num), end='') 
+        #    for j in range(maxSpacing-2):
+        #        print("")

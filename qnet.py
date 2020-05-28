@@ -21,17 +21,23 @@ class Qnet(nn.Module):
     def sample_action(self, env, epsilon, flip=False):
         out = self.forward(env.getStateTensor(flip))
 
-        validActions = env.getValidActions()
+        validActions = env.getValidActions(flip)
 
+        final_action = 36
         if random.random() < epsilon:
-            return random.choice(validActions) 
+            final_action = random.choice(validActions) 
         else:
             valid = out.gather(0, torch.tensor(validActions))
 
             choice = valid.argmax().item()
             action = validActions[choice]
 
-            return action
+            final_action = action
+
+        if flip and final_action != 36:
+            final_action = 35 - final_action
+            
+        return final_action
 
 def train(q, q_target, memory, optimizer, batch_size, gamma):
     for i in range(10):

@@ -11,7 +11,7 @@ def main(mode):
     env = Environment()
     
     renderInterval = 2000
-    episode_count = 10_000
+    episode_count = 20_000
 
     learningAgent = LearningAgent(env)
     learningAgent.q.load_state_dict(torch.load("model_data"))
@@ -27,11 +27,11 @@ def main(mode):
     if test:
         learningAgent.q.eval()
     else:
-        stupidAgent = StupidAgent(learningAgent.state_dict())
-
+        #stupidAgent = StupidAgent(learningAgent.state_dict())
+        stupidAgent = MultiStupidAgent(3)
 
     epsilon = 0.08
-    epsilon_reset = 10_000
+    epsilon_reset = 5_000
     for episode in range(episode_count):
         if test:
             epsilon = 0
@@ -45,15 +45,15 @@ def main(mode):
         isDone = False
         
         while not isDone:
-            isDone = learningAgent.move(env, epsilon)
+            isDone = learningAgent.move(env, epsilon, flip=False)
 
             if episode % renderInterval == 0 or episode+1 == episode_count:
-                #env.render()
+                env.render(flip=False)
 
                 if not test:
                     torch.save(learningAgent.state_dict(), "model_data")
                 
-            stupidAgent.move(env, epsilon)
+            stupidAgent.move(env, epsilon, flip=True)
         
         
         if not test:
