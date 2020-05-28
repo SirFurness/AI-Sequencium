@@ -1,6 +1,8 @@
 import collections
 import random
 
+import torch
+
 class ReplayBuffer():
     def __init__(self, buffer_limit):
         self.buffer = collections.deque(maxlen=buffer_limit)
@@ -22,8 +24,8 @@ class ReplayBuffer():
             state, action, reward, newState, newValidActionList, done_mask = transition
 
             states.append(state)
-            actions.append([a])
-            rewards.append([r])
+            actions.append([action])
+            rewards.append([reward])
             newStates.append(newState)
             newValidActions.append(newValidActionList)
             doneMasks.append([done_mask])
@@ -32,7 +34,7 @@ class ReplayBuffer():
                 torch.tensor(actions),
                 torch.tensor(rewards, dtype=torch.float),
                 torch.tensor(newStates, dtype=torch.float),
-                torch.tensor(newValidActions),
+                newValidActions,
                 torch.tensor(doneMasks, dtype=torch.float))
 
     def size(self):

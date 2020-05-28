@@ -18,7 +18,7 @@ class Environment:
         self.tieReward = 0
         self.notOverReward = 0
 
-    def restart(self):
+    def reset(self):
         self.game.restart()
 
     def getValidActions(self):

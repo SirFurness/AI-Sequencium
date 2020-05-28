@@ -45,10 +45,23 @@ def train(q, q_target, memory, optimizer, batch_size, gamma):
 
         # q values for the given new state
         q_primes = q_target(newStates)
-        valid_q_primes = q_primes.gather(1, newValidActions)
+        list_q_primes = q_primes.tolist()
+       
+        max_q_primes_list = []
+        for state_index, q_primes in enumerate(list_q_primes):
+            valid_q_primes = []
+            for q_prime_index, q_prime in enumerate(q_primes):
+                if q_prime_index in newValidActions[state_index]:
+                    valid_q_primes.append(q_prime)
+
+            max_valid = max(valid_q_primes)
+            max_q_primes_list.append([max_valid])
+
+        #valid_q_primes = q_primes.gather(1, newValidActions)
 
         # max valid q primes for the new state
-        max_q_primes = valid_q_primes.max(1)[0].unsqueeze(1)
+        #max_q_primes = valid_q_primes.max(1)[0].unsqueeze(1)
+        max_q_primes = torch.tensor(max_q_primes_list)
 
         # What the q value for the action should be
         targets = rewards + gamma * max_q_primes * done_masks
