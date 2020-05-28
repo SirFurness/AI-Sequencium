@@ -8,7 +8,7 @@ import torch.optim as optim
 class Qnet(nn.Module):
     def __init__(self):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(36, 128)
+        self.fc1 = nn.Linear(36+2, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, 37)
 
@@ -18,8 +18,8 @@ class Qnet(nn.Module):
         x = self.fc3(x)
         return x
 
-    def sample_action(self, env, epsilon):
-        out = self.forward(env.getStateTensor())
+    def sample_action(self, env, epsilon, flip=False):
+        out = self.forward(env.getStateTensor(flip))
 
         validActions = env.getValidActions()
 

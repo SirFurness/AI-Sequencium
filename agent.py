@@ -5,6 +5,8 @@ from replay_buffer import ReplayBuffer
 
 import torch.optim as optim
 
+import random
+
 class LearningAgent:
     def __init__(self, env):
         self.q = Qnet()
@@ -17,8 +19,9 @@ class LearningAgent:
 
         self.print_interval = 20
         self.score = 0.0
+        self.total_score = 0
 
-        self.learning_rate = 0.1
+        self.learning_rate = 0.01
         self.optimizer = optim.Adam(self.q.parameters(), lr=self.learning_rate)
 
         self.batch_size = 32
@@ -36,14 +39,15 @@ class LearningAgent:
         self.state = newState
 
         self.score += reward
+        self.total_score += reward
 
         return isDone
 
     def updateInfo(self, episode, epsilon):
         if episode % self.print_interval == 0 and episode != 0:
             self.updateQTarget()
-            print("episode: {}, score: {:.1f}, buffer: {}, epsilon: {:.1f}%".format(
-                episode, self.score/self.print_interval, self.memory.size(), epsilon*100))
+            print("episode: {}, total_score: {:.2f}, score: {:.1f}, buffer: {}, epsilon: {:.1f}%".format(
+                episode, self.total_score/episode, self.score/self.print_interval, self.memory.size(), epsilon*100))
             self.score = 0.0
 
     def train(self):
@@ -61,13 +65,33 @@ class StupidAgent:
         self.q = Qnet()
         self.q.load_state_dict(state_dict)
 
-        self.updateInterval = 10
+        self.updateInterval = 1000
 
     def move(self, env, epsilon):
-        action = self.q.sample_action(env, epsilon)
+        action = self.q.sample_action(env, epsilon, flip=True)
         
         env.step(action)
 
     def update(self, episode, state_dict):
         if episode % self.updateInterval == 0 and episode != 0:
             self.q.load_state_dict(state_dict)
+
+class HumanAgent:
+    def move(self, env, _epsilon):
+        strMove = input("Row Space Column: ")
+        listInput = strMove.split()
+        rowAndCol = [int(string) for string in listInput]
+
+        row = rowAndCol[0]
+        col = rowAndCol[1]
+
+        action = env.convertCoordinateToAction((row, col)) 
+
+        env.step(action)
+
+class RandomAgent:
+    def move(self, env, _epsilon):
+        validActions = env.getValidActions()
+        action = random.choice(validActions)
+
+        env.step(action)

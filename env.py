@@ -64,13 +64,25 @@ class Environment:
 
         return row*self.game.size + col
 
-    def getState(self):
+    def getState(self, flip=False):
         # flattens the list
-        return [self.getSquareContent(square)
+        state = [self.getSquareContent(square, flip)
                 for row in self.game.grid for square in row]
 
-    def getStateTensor(self):
-        stateList = self.getState()
+        if flip:
+            state.reverse()
+
+        if flip:
+            state.append(self.game.highestContentForB)
+            state.append(self.game.highestContentForA)
+        else:
+            state.append(self.game.highestContentForA)
+            state.append(self.game.highestContentForB)
+
+        return state
+
+    def getStateTensor(self, flip=False):
+        stateList = self.getState(flip)
 
         return torch.tensor(stateList, dtype=torch.float)
 
@@ -78,11 +90,15 @@ class Environment:
         return [[self.getSquareContent(square) for square in row]
                 for row in self.game.grid]
 
-    def getSquareContent(self, square):
+    def getSquareContent(self, square, flip=False):
+        scale = 1
+        if flip:
+            scale = -1
+
         if square.player == Player.A:
-            return square.content
+            return square.content * scale
         elif square.player == Player.B:
-            return square.content * -1
+            return square.content * -1 * scale
         else:
             # NoPlayer
             return 0
@@ -95,12 +111,16 @@ class Environment:
             return self.notOverReward
         elif winner == Winner.Tie:
             return self.tieReward
-        elif winner == Winner.A and player == Player.A:
-            return self.winReward
-        elif winner == Winner.B and player == Player.B:
+        elif winner == Winner.A:
             return self.winReward
         else:
             return self.loseReward
+        #elif winner == Winner.A and player == Player.A:
+        #    return self.winReward
+        #elif winner == Winner.B and player == Player.B:
+        #    return self.winReward
+        #else:
+        #    return self.loseReward
 
     def render(self):
         state = self.getStateNotFlat()
