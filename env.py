@@ -1,5 +1,4 @@
 import math
-import random
 
 from player import Player
 from winner import Winner
@@ -64,6 +63,9 @@ class Environment:
         # flattens the list
         return [self.getSquareContent(square)
                 for row in self.game.grid for square in row]
+    def getStateNotFlat(self):
+        return [[self.getSquareContent(square) for square in row]
+                for row in self.game.grid]
 
     def getSquareContent(self, square):
         if square.player == Player.A:
@@ -90,4 +92,14 @@ class Environment:
             return self.loseReward
 
     def render(self):
-        print(self.game)
+        state = self.getStateNotFlat()
+        maxSpacing = 4
+
+        for row in state:
+            for num in row:
+                spacing = maxSpacing - len(str(num))
+                for i in range(spacing):
+                    print(" ", end='')
+                print(str(num), end='') 
+            for j in range(maxSpacing-2):
+                print("")
