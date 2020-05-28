@@ -1,4 +1,5 @@
 import math
+import random
 
 from player import Player
 from winner import Winner
@@ -16,6 +17,20 @@ class Environment:
     def restart(self):
         self.game.restart()
 
+    def getValidActions(self):
+        availableCoordinates = [(row, col) 
+                for row in range(self.game.size)
+                for col in range(self.game.size)
+                if self.game.isSquareAvailable(row, col)]
+
+        availableActions = [self.convertCoordinateToAction(coord)
+                for coord in availableCoordinates]
+
+        if len(availableActions) == 0:
+            availableActions = [-1]
+
+        return availableActions
+
     def step(self, action):
         self.applyAction(action)
         
@@ -28,6 +43,7 @@ class Environment:
     def applyAction(self, action):
         # no-move action
         if action < 0:
+            self.game.updateCurrentPlayer()
             return
 
         coordinate = self.convertActionToCoordinate(action)
@@ -38,6 +54,11 @@ class Environment:
         col = action % self.game.size
 
         return (row, col)
+
+    def convertCoordinateToAction(self, coord):
+        row, col = coord  
+
+        return row*self.game.size + col
 
     def getState(self):
         # flattens the list

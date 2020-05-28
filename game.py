@@ -65,16 +65,20 @@ class Game:
             self.highestContentForB = max(content, self.highestContentForB)
 
     def updateCurrentPlayer(self):
+        #if self.currentPlayer == Player.A:
+        #    if self.availableSquaresForB > 0:
+        #        self.currentPlayer = Player.B
+        #    else:
+        #        self.currentPlayer = Player.A
+        #elif self.currentPlayer == Player.B:
+        #    if self.availableSquaresForA > 0:
+        #        self.currentPlayer = Player.A
+        #    else:
+        #        self.currentPlayer = Player.B
         if self.currentPlayer == Player.A:
-            if self.availableSquaresForB > 0:
-                self.currentPlayer = Player.B
-            else:
-                self.currentPlayer = Player.A
-        elif self.currentPlayer == Player.B:
-            if self.availableSquaresForA > 0:
-                self.currentPlayer = Player.A
-            else:
-                self.currentPlayer = Player.B
+            self.currentPlayer = Player.B
+        else:
+            self.currentPlayer = Player.A
                 
     def isGameOver(self):
         return (self.availableSquaresForA == 0 and self.availableSquaresForB == 0)
@@ -84,7 +88,7 @@ class Game:
             return Winner.NotOver
         elif self.highestContentForA == self.highestContentForB:
             return Winner.Tie
-        elif self.highestContentForA > highestContentForB:
+        elif self.highestContentForA > self.highestContentForB:
             return Winner.A
         else:
             return Winner.B
