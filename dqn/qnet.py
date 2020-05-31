@@ -40,6 +40,7 @@ class Qnet(nn.Module):
         return final_action
 
 def train(q, q_target, memory, optimizer, batch_size, gamma):
+    total_loss = 0
     for i in range(10):
         states, actions, rewards, newStates, newValidActions, done_masks = memory.sample(batch_size)
 
@@ -73,6 +74,7 @@ def train(q, q_target, memory, optimizer, batch_size, gamma):
         targets = rewards + gamma * max_q_primes * done_masks
 
         loss = F.smooth_l1_loss(q_actions, targets)
+        total_loss += loss
 
         # Zero the gradients
         optimizer.zero_grad()

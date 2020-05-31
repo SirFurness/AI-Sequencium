@@ -11,7 +11,7 @@ def main(mode):
     env = Environment()
     
     renderInterval = 2000
-    episode_count = 20_000
+    episode_count = 50_000
 
     learningAgent = LearningAgent(env)
     learningAgent.q.load_state_dict(torch.load("model_data"))

@@ -4,6 +4,7 @@ import qnet
 from replay_buffer import ReplayBuffer
 
 import torch.optim as optim
+from torch.optim.lr_scheduler import StepLR
 
 import random
 import math
@@ -22,8 +23,11 @@ class LearningAgent:
         self.score = 0.0
         self.total_score = 0
 
-        self.learning_rate = 0.01
+        self.learning_rate = 0.1
         self.optimizer = optim.Adam(self.q.parameters(), lr=self.learning_rate)
+
+        # gamma = decaying factor
+        self.scheduler = StepLR(self.optimizer, step_size=10, gamma=0.999)
 
         self.batch_size = 32
         self.gamma = 0.98
@@ -45,10 +49,13 @@ class LearningAgent:
         return isDone
 
     def updateInfo(self, episode, epsilon):
+        if self.memory.size() > 2000:
+            self.scheduler.step()
+
         if episode % self.print_interval == 0 and episode != 0:
             self.updateQTarget()
-            print("episode: {}, total_score: {:.2f}, score: {:.1f}, buffer: {}, epsilon: {:.1f}%".format(
-                episode, self.total_score/episode, self.score/self.print_interval, self.memory.size(), epsilon*100))
+            print("episode: {}, lr: {:.2f}, total_score: {:.2f}, score: {:.1f}, buffer: {}, epsilon: {:.1f}%".format(
+                episode, self.scheduler.get_last_lr()[0], self.total_score/episode, self.score/self.print_interval, self.memory.size(), epsilon*100))
             self.score = 0.0
 
     def train(self):
@@ -72,6 +79,8 @@ class MultiStupidAgent:
         self.update_interval = 1000 * num_of_agents
         self.update_offset = math.trunc(self.update_interval / num_of_agents)
 
+        self.reset_interval = 10_000
+
     def move(self, env, epsilon, flip):
         current_q = self.q_nets[self.current_agent]
 
@@ -83,6 +92,9 @@ class MultiStupidAgent:
 
     def update(self, episode, state_dict):
         self.increaseCurrentAgent()
+
+        if episode % self.reset_interval == 0:
+            self.q_nets = [Qnet() for i in range(self.num_of_agents)]
 
         for i, q_net in enumerate(self.q_nets):
             if (episode + i * self.update_offset) % self.update_interval == 0:
