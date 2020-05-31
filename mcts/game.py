@@ -23,8 +23,10 @@ def is_player_square(square_content, player):
 def square_player(square_content):
     if is_player_square(square_content, Player.A):
         return Player.A
-    else:
+    elif is_player_square(square_content, Player.B):
         return Player.B
+    else:
+        return Player.NoPlayer
 
 def valid_actions_for_player(state, player):
     valid_actions = []
@@ -34,11 +36,11 @@ def valid_actions_for_player(state, player):
     return valid_actions
 
 def empty_neighbors(state, i):
-    all_neighbors = neighbors(state, i)
+    all_neighbors = neighbors(i)
     
     return [square_index for square_index in all_neighbors if state[square_index] == 0] 
 
-def neighbors(state, i):
+def neighbors(i):
     neighbors = []
 
     # top
@@ -84,12 +86,25 @@ def current_player(state):
     elif num_player_a_moves > num_player_b_moves:
         return Player.B
     else:
-        # why not
+        return Player.NoPlayer
+def current_player_from_previous(state, previous_player):
+    num_player_a_actions = len(valid_actions_for_player(state, Player.A))
+    num_player_b_actions = len(valid_actions_for_player(state, Player.B))
+
+    if num_player_a_actions == 0:
         return Player.B
+    elif num_player_b_actions == 0:
+        return Player.A
+    elif previous_player == Player.A:
+        return Player.B
+    elif previous_player == Player.B:
+        return Player.A
+    else:
+        return Player.NoPlayer
 
 def play(state, action_square_index):
     player = current_player(state)
-    all_neighbors = neighbors(state, action_square_index)
+    all_neighbors = neighbors(action_square_index)
     same_player_neighbors = [square_index
             for square_index in all_neighbors
             if square_player(state[square_index]) == player]
@@ -123,6 +138,19 @@ def winner(state):
             return Winner.B
     else:
         return Winner.NotOver
+
+def are_adjacent(move1, move2):
+    return move2 in neighbors(move1)
+
+def is_adjacent_to_opponent(state, move, player):
+    all_neighbors = neighbors(move)
+
+    for neighbor_index in all_neighbors:
+        neighbor_player = square_player(state[neighbor_index])
+        if neighbor_player != Player.NoPlayer and neighbor_player != player:
+            return True
+
+    return False
 
 def render(state):
     maxSpacing = 4
